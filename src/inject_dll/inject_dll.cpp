@@ -121,7 +121,7 @@ LPTHREAD_START_ROUTINE InjectDll::GetLoadLibraryProc() const {
         case E_BIT_TYPE_X86:
             return reinterpret_cast<LPTHREAD_START_ROUTINE>(QueryX86ProcAddress(L"kernel32.dll", L"LoadLibraryW"));
         case E_BIT_TYPE_X64:
-            return reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandle(TEXT("kernel32")),"LoadLibraryW"));
+            return reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")),"LoadLibraryW"));
     }
     return nullptr;
 }
