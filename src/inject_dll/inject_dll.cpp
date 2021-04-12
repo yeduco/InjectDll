@@ -76,8 +76,9 @@ bool InjectDll::Inject() {
     this->CloseProcess();
     return true;
 }
-
-bool InjectDll::OpenProcess(int type, CSTRING &name, DWORD dwDesiredAccess, WINBOOL bInheritHandle) {
+bool InjectDll::OpenProcess(int type, CSTRING &name,
+                            DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_CREATE_THREAD | PROCESS_VM_WRITE |PROCESS_VM_OPERATION,
+                            WINBOOL bInheritHandle = false) {
     DWORD dwProcessId = 0;
     switch (type) {
         case E_FETCH_CLASS_NAME:
