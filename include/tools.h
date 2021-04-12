@@ -5,11 +5,7 @@
 #ifndef BEHAVIORTREE_TOOLS_H
 #define BEHAVIORTREE_TOOLS_H
 
-#include "Windows.h"
-#include "iostream"
-#include "string"
-#include "tlhelp32.h"
-#include "vector"
+#include "include.h"
 
 #define VERSION_MAX 4
 #define JUDGE_RETURN(CONDITION, RETURN) if (!(CONDITION)){return RETURN;}
@@ -21,7 +17,6 @@ typedef int (WINAPI *GetDpiForWindow)(HWND hwnd);
 #define DPI_SCALE_FACTOR_200 192
 
 #define CSTRING const std::string
-
 
 typedef struct EnumHwndArg{
     std::vector<HWND> *dwHwndVec{};
@@ -56,5 +51,7 @@ bool Is64BitSystemOS();
 bool Is64BitProcess(DWORD dwProcessID);
 
 bool Is64BitProcess(HANDLE hProcess);
+
+DWORD QueryX86ProcAddress(const std::wstring& moduleName, const std::wstring& procName);
 
 #endif //BEHAVIORTREE_TOOLS_H

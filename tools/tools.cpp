@@ -2,9 +2,9 @@
 // Created by iWong on 29/3/2021.
 //
 
-#include "tools.h"
-#include "psapi.h"
-#include "winver.h"
+#include "../include/tools.h"
+//#include "psapi.h"
+
 
 struct NTCREATETHREAD_BUFFER  {
     ULONG     m_size;
@@ -18,32 +18,7 @@ struct NTCREATETHREAD_BUFFER  {
     ULONG     m_unknown8;
 };
 
-typedef NTSTATUS ( __stdcall *NTCREATETHREADEX) (
-        PHANDLE thread,
-        ACCESS_MASK desired_access,
-        LPVOID object_attributes,
-        HANDLE process_handle,
-        LPTHREAD_START_ROUTINE start_address,
-        LPVOID lp,
-        BOOL create_suspended,
-        ULONG stack_zero_bits,
-        ULONG size_of_stack_commit,
-        ULONG size_of_stack_reserve,
-        LPVOID bytes_buffer );
 
-
-typedef NTSTATUS(WINAPI* LPFN_NTCREATETHREADEX)(
-        OUT PHANDLE ThreadHandle,
-        IN ACCESS_MASK DesiredAccess,
-        IN LPVOID ObjectAttributes,
-        IN HANDLE ProcessHandle,
-        IN LPTHREAD_START_ROUTINE ThreadProcedure,
-        IN LPVOID ParameterData,
-        IN BOOL CreateSuspended,
-        IN SIZE_T StackZeroBits,
-        IN SIZE_T SizeOfStackCommit,
-        IN SIZE_T SizeOfStackReserve,
-        OUT LPVOID BytesBuffer);
 
 HWND GetWindowHwnd(const std::string& className){
     HWND hwnd = FindWindow(className.c_str(), nullptr);
@@ -201,6 +176,62 @@ bool Is64BitProcess(DWORD dwProcessID) {
     return bIsWow64;
 }
 
+DWORD QueryX86ProcAddress(const std::wstring& moduleName, const std::wstring& procName) {
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    auto cWinDir = new TCHAR[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, cWinDir);
+    std::cout << cWinDir << std::endl;
+    WCHAR cmdLine[2048] = { 0 };
+    DWORD result;
+
+    wsprintfW(cmdLine, L"..\\src\\Getx86Proc %s %s", moduleName.c_str(), procName.c_str());
+    printf("%s\n", cmdLine);
+//    std::cout << cmdLine << std::endl;
+//    LPTSTR sConLin = wcscat(reinterpre
+//    t_cast<wchar_t *>(cWinDir), L"\\..\\Debug\\another.exe a b c d");
+    if (!CreateProcessW(
+            NULL,
+            cmdLine,
+            NULL,           // Process handle not inheritable
+            NULL,           // Thread handle not inheritable
+            FALSE,          // Set handle inheritance to FALSE
+            0,              // No creation flags
+            NULL,           // Use parent's environment block
+            NULL,           // Use parent's starting directory
+            &si,            // Pointer to STARTUPINFO structure
+            &pi))
+    {
+        printf("CreateProcess (on Getx86Proc) failed : ");
+        DWORD lastErrorCode = GetLastError();
+        if (lastErrorCode != 0) {
+            printf("errror %lu", lastErrorCode);
+        }
+        else {
+            printf(" unable to find Getx86Proc. Please put it next to Injectx64 and rewrite your command.\n");
+        }
+
+        return 0;
+    }
+
+    // Wait until child process exits.
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    GetExitCodeProcess(pi.hProcess, &result);
+
+    // Close process and thread handles.
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return result;
+}
+
+
 bool Is64BitProcess(HANDLE hProcess){
     JUDGE_RETURN(Is64BitSystemOS() == true, false);
     JUDGE_RETURN(nullptr != hProcess, false);
@@ -218,7 +249,6 @@ bool Is64BitProcess(HANDLE hProcess){
         return true;
     }
 }
-
 
 
 //    DWORD dwSize = strlen(dllPath.c_str()) + 1;
